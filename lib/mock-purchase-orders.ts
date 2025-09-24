@@ -3,6 +3,7 @@ import type { PurchaseOrder } from "./purchase-order-service";
 export const mockPurchaseOrders: PurchaseOrder[] = [
   {
     pdfName: "23953814 - 5163.pdf",
+    poNumber: "23953814",
     finalLinesOutput: [
       {
         json: {
@@ -90,6 +91,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
 
   {
     pdfName: "578-109595-0.pdf",
+    poNumber: "578-109595-0",
     finalLinesOutput: [
       {
         json: {
@@ -133,6 +135,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
   },
   {
     pdfName: "Cin7_PurchaseOrder_52124_PO-52124_12_Sep_2025_308_PM.pdf",
+    poNumber: "PO-52124",
     finalLinesOutput: [
       {
         json: {
@@ -177,6 +180,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
   },
   {
     pdfName: "LS13905 DOMUS - ULTRA URGENT - THANKS JUDY 12.9.25.pdf",
+    poNumber: "LS13905",
     finalLinesOutput: [
       {
         json: {
@@ -220,6 +224,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
   },
   {
     pdfName: "Purchase Order 90213750.pdf",
+    poNumber: "90213750",
     finalLinesOutput: [
       {
         json: {
@@ -333,6 +338,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
   },
   {
     pdfName: "Purchase Order 14960718.pdf",
+    poNumber: "14960718",
     finalLinesOutput: [
       {
         json: {
@@ -391,6 +397,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
   },
   {
     pdfName: "S1001256-PURCHASE ORDER-1718316.pdf",
+    poNumber: "1718316",
     finalLinesOutput: [
       {
         json: {
@@ -463,6 +470,7 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
   },
   {
     pdfName: "E89B8573-8C95-4C40-91A8-E53ABB2B5D1F.pdf",
+    poNumber: "81867501",
     finalLinesOutput: [
       {
         json: {
@@ -519,5 +527,362 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
       sellToCity: "BROOKVALE",
     },
     created_at: "2025-09-24 05:43:54.870331+00",
+  },
+  {
+    pdfName: "ORD00185110.pdf",
+    poNumber: "185110",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "ZEKE-8-BLK",
+          code: "19542",
+          itemDescription: "ZEKE-8W RCT WB 240V BLK",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "19542",
+          poDescription: "19542-240v 3k",
+          quantity: 4,
+          unitprice: 87,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-12",
+      postingDate: null,
+      customerId: "EVERGLOW",
+      customerNumber: "EVERGLOW",
+      customerName: "Secuview T/A Everglow Lighting",
+      billToName: "Everglow LED Lighting",
+      billToCustomerNumber: "",
+      shipToName: "Everglow LED Lighting",
+      sellToAddressLine1: "6/20-26 Sullivan Street",
+      billToAddressLine1: "6/20-26 Sullivan Street",
+      shipToAddressLine1: "6/20-26 Sullivan Street",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: null,
+      salesperson: null,
+      requestedDeliveryDate: null,
+      totalAmountExcludingTax: "348",
+      totalTaxAmount: "34.8",
+      totalAmountIncludingTax: "382.8",
+      sellToCity: "MOORABBIN",
+    },
+    created_at: "2025-09-24 06:57:49.975493+00",
+  },
+  {
+    pdfName: "PO 30583.pdf",
+    poNumber: "30583",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "BLISS-10-WHT",
+          code: "20706",
+          itemDescription: "BLISS-10 RND 10W LED D/L WHT",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "20706",
+          poDescription:
+            "DOMUS 20706 BLISS-10 ROUND 10W DIMMABLE LED COLOUR CHANGE SWITCHABLE DOWNLIGHT - SATIN WHITE FRAME",
+          quantity: 45,
+          unitprice: 9.6,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-12",
+      postingDate: null,
+      customerId: "SCHNAP",
+      customerNumber: "SCHNAP",
+      customerName: "Schnap Electric Products",
+      billToName: "SCHNAP Electric Products",
+      billToCustomerNumber: "",
+      shipToName: "SCHNAP Electric Products",
+      sellToAddressLine1: "3/192A Kingsgrove Rd",
+      billToAddressLine1: "3/192A Kingsgrove Rd",
+      shipToAddressLine1: "3/192A Kingsgrove Rd",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: null,
+      salesperson: null,
+      requestedDeliveryDate: null,
+      totalAmountExcludingTax: "432",
+      totalTaxAmount: "43.2",
+      totalAmountIncludingTax: "475.2",
+      sellToCity: "KINGSGROVE",
+    },
+    created_at: "2025-09-24 06:58:55.772828+00",
+  },
+  {
+    pdfName: "Purchase Order 1299603.pdf",
+    poNumber: "1299603",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "PICO-7-WHT",
+          code: "21582",
+          itemDescription: "PICO-7 MINI REC RND KIT IP54 UGR19 WHT",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "21582",
+          poDescription:
+            "DOWNLIGHT PICO 7W 3000K - 4000K - 5700K (SWITCHABLE) 50MM C",
+          quantity: 17,
+          unitprice: 41,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-12",
+      postingDate: null,
+      customerId: "LHBUL",
+      customerNumber: "LHBUL",
+      customerName: "L&H Bulleen [3105]",
+      billToName: "Lawrence & Hanson Group Pty Ltd",
+      billToCustomerNumber: "",
+      shipToName: "L & H - BULLEEN",
+      sellToAddressLine1: "204 BULLEEN ROAD",
+      billToAddressLine1: "204 BULLEEN ROAD",
+      shipToAddressLine1: "204 BULLEEN ROAD",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: "Road",
+      salesperson: null,
+      requestedDeliveryDate: "2025-09-17",
+      totalAmountExcludingTax: "697",
+      totalTaxAmount: null,
+      totalAmountIncludingTax: "697",
+      sellToCity: "BULLEEN",
+    },
+    created_at: "2025-09-24 07:00:02.095971+00",
+  },
+  {
+    pdfName: "Purchase Order 30953368.pdf",
+    poNumber: "30953368",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "YOU-3-RND",
+          code: "19985",
+          itemDescription: "YOU RND 3W 240V WHITE",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "BI30925",
+          poDescription: "BI30925 DOM 19985",
+          quantity: 4,
+          unitprice: 61.3,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+      {
+        json: {
+          itemNo: "DECO-8-WHT",
+          code: "20410",
+          itemDescription: "DECO-8 RND 8W LED KIT WHT",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "DOM20410",
+          poDescription: "LED D/LIGHT DECO RND 8W CCT 70MM C/O WHT",
+          quantity: 25,
+          unitprice: 24.5,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 1,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-10",
+      postingDate: null,
+      customerId: "SHERALB",
+      customerNumber: "SHERALB",
+      customerName: "Sherriff Albion [309]",
+      billToName: "SHERRIFF ELECTRICAL PTY LTD - ALBION",
+      billToCustomerNumber: "",
+      shipToName: "SHERRIFF ELECTRICAL",
+      sellToAddressLine1: "11 ELLIOT STREET",
+      billToAddressLine1: "11 ELLIOTT STREET",
+      shipToAddressLine1: "11 ELLIOT STREET",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: null,
+      salesperson: null,
+      requestedDeliveryDate: "2025-09-10",
+      totalAmountExcludingTax: "857.7",
+      totalTaxAmount: null,
+      totalAmountIncludingTax: null,
+      sellToCity: "ALBION",
+    },
+    created_at: "2025-09-24 07:02:37.309762+00",
+  },
+  {
+    pdfName: "Purchase Order GN144642.PDF",
+    poNumber: "GN144642",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "KEY-G9-TRIO",
+          code: "65126",
+          itemDescription: "KEY G9 4W 240V TRICOLOUR DIMMABLE CRI90",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "DOM65126",
+          poDescription: "KEY-G9 TRIO DIMMABLE",
+          quantity: 20,
+          unitprice: 9,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-12",
+      postingDate: null,
+      customerId: "ZOLTAN",
+      customerNumber: "ZOLTAN",
+      customerName: "Zoltan Electrical & Plumbing Services ",
+      billToName: "ZOLTAN ELECTRICAL & PLUMBING SUPPLIES",
+      billToCustomerNumber: "",
+      shipToName: "ZOLTAN ELECTRICAL & PLUMBING SUPPLIES",
+      sellToAddressLine1: "399 CONCORD ROAD",
+      billToAddressLine1: "399 CONCORD ROAD",
+      shipToAddressLine1: "399 CONCORD ROAD",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: null,
+      salesperson: null,
+      requestedDeliveryDate: null,
+      totalAmountExcludingTax: "180",
+      totalTaxAmount: "18",
+      totalAmountIncludingTax: "198",
+      sellToCity: "CONCORD WEST",
+    },
+    created_at: "2025-09-24 07:05:13.233129+00",
+  },
+  {
+    pdfName: "Purchase Order NW344012.pdf",
+    poNumber: "NW344012",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "BL-100",
+          code: "10700",
+          itemDescription: "BL-100 3-TIER BOLLARD HEAD E27",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "10700",
+          poDescription: "BL-100 3-TIER BOLLARD HEAD E27",
+          quantity: 5,
+          unitprice: 36.5,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+      {
+        json: {
+          itemNo: "TURIN-PTOP",
+          code: "15477",
+          itemDescription: "TURIN POST TOP B22",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "TEMP500",
+          poDescription: "15477 TURIN POST TOP 60MM FT GT439 BLACK",
+          quantity: 1,
+          unitprice: 135,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 1,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-05",
+      postingDate: null,
+      customerId: "ROVE",
+      customerNumber: "ROVE",
+      customerName: "Rovert Pty Ltd Newcastle",
+      billToName: "Rovert Lighting & Electrical",
+      billToCustomerNumber: "",
+      shipToName: "ROVERT LTD",
+      sellToAddressLine1: "4 BRONTE ROAD",
+      billToAddressLine1: "4 BRONTE ROAD",
+      shipToAddressLine1: "4 BRONTE ROAD",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: null,
+      salesperson: null,
+      requestedDeliveryDate: null,
+      totalAmountExcludingTax: "317.5",
+      totalTaxAmount: null,
+      totalAmountIncludingTax: null,
+      sellToCity: "BROADMEADOW",
+    },
+    created_at: "2025-09-24 07:06:10.433067+00",
+  },
+  {
+    pdfName: "PURCHASE_ORDER.PDF",
+    poNumber: "A/132791",
+    finalLinesOutput: [
+      {
+        json: {
+          itemNo: "SAMSON-FL",
+          code: "22830",
+          itemDescription: "SAMSON-FL M&C FLOOR LAMP DIM 240V",
+          unitOfMeasureCode: "PCS",
+          poItemNumber: "22830",
+          poDescription:
+            "SAMSON UPLIGHTER MOTHER&SON DIMMABLE BLACK (30W&5W CCT QUAD) STOCK",
+          quantity: 2,
+          unitprice: 94.4,
+          shipmentDate: "",
+        },
+        pairedItem: {
+          item: 0,
+        },
+      },
+    ],
+    finalSOHeaderOutput: {
+      orderDate: "2025-09-12",
+      postingDate: null,
+      customerId: "L4UASH",
+      customerNumber: "L4UASH",
+      customerName: "Lights For You Ashfield",
+      billToName: "Lights For You Pty Ltd",
+      billToCustomerNumber: "",
+      shipToName: "Lights For You Pty Ltd",
+      sellToAddressLine1: "433 Liverpool Road",
+      billToAddressLine1: "433 Liverpool Road",
+      shipToAddressLine1: "433 Liverpool Road",
+      currencyCode: "AUD",
+      pricesIncludeTax: false,
+      paymentTerms: null,
+      shipmentMethod: null,
+      salesperson: null,
+      requestedDeliveryDate: null,
+      totalAmountExcludingTax: "188.8",
+      totalTaxAmount: null,
+      totalAmountIncludingTax: null,
+      sellToCity: "ASHFIELD",
+    },
+    created_at: "2025-09-24 07:07:08.960284+00",
   },
 ];

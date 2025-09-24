@@ -1,6 +1,24 @@
 // Service layer for Purchase Order data operations
-// Simulates database calls with mock data structured like real DB responses
-import { createClient } from "@supabase/supabase-js";
+// Can use either mock data or real Supabase database
+
+import { createBrowserClient } from "@supabase/ssr";
+import { mockPurchaseOrders } from "./mock-purchase-orders";
+
+// Supabase client - only works when environment variables are set
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.log("[v0] Supabase env vars not found, using mock data");
+    return null;
+  }
+
+  return createBrowserClient(supabaseUrl, supabaseKey);
+};
+
+const USE_REAL_DATABASE = false; // Set to true when you have Supabase configured
+
 export interface LineItem {
   json: {
     itemNo: string;
@@ -45,31 +63,75 @@ export interface SOHeader {
 export interface PurchaseOrder {
   id?: string;
   pdfName: string;
+  poNumber: string; // Added poNumber field to interface
   finalLinesOutput: LineItem[] | null;
   finalSOHeaderOutput: SOHeader | null;
   created_at: string;
 }
 
-import { mockPurchaseOrders } from "./mock-purchase-orders";
-
-const supabase = createClient(
-  "https://snregmhjviiklvxkiwpp.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNucmVnbWhqdmlpa2x2eGtpd3BwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyOTMzNTAsImV4cCI6MjA3Mzg2OTM1MH0.QV2xQI-6MNUXNP9kFleOBUSFONCmki84RaCYLvqxl6I"
-);
-
-// Service class that simulates database operations
+// Service class that handles both mock and real database operations
 export class PurchaseOrderService {
-  // Simulate database query with filtering and sorting
   static async getTodaysPurchaseOrders(): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    if (USE_REAL_DATABASE) {
+      return this.getRealTodaysPurchaseOrders();
+    } else {
+      return this.getMockTodaysPurchaseOrders();
+    }
+  }
+
+  private static async getRealTodaysPurchaseOrders(): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error("Supabase client not configured");
+      }
+
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split("T")[0];
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+
+      const { data, error } = await supabase
+        .from("FinalPOData")
+        .select("*")
+        // .gte("created_at", today)
+        // .lt("created_at", tomorrow)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("[v0] Supabase error:", error);
+        return { data: null, error: { message: error.message } };
+      }
+
+      console.log(
+        "[v0] Fetched",
+        data?.length || 0,
+        "purchase orders from Supabase"
+      );
+      return { data: data || [], error: null };
+    } catch (err) {
+      console.error("[v0] Database error:", err);
+      return {
+        data: null,
+        error: { message: "Failed to fetch purchase orders from database" },
+      };
+    }
+  }
+
+  private static async getMockTodaysPurchaseOrders(): Promise<{
     data: PurchaseOrder[] | null;
     error: { message: string } | null;
   }> {
     try {
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const { data: orders, error } = await supabase.from("FinalPOData").select('*');
-      console.log("orders", orders);
 
       // Get today's date in YYYY-MM-DD format for comparison
       const today = new Date().toISOString().split("T")[0];
@@ -85,6 +147,14 @@ export class PurchaseOrderService {
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
+
+      console.log(
+        "[v0] Service: Fetched",
+        sortedOrders.length,
+        "mock purchase orders for",
+        today
+      );
+
       return {
         data: sortedOrders,
         error: null,
@@ -99,6 +169,70 @@ export class PurchaseOrderService {
   }
 
   static async getErrorOrders(): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    if (USE_REAL_DATABASE) {
+      return this.getRealErrorOrders();
+    } else {
+      return this.getMockErrorOrders();
+    }
+  }
+
+  private static async getRealErrorOrders(): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error("Supabase client not configured");
+      }
+
+      const { data, error } = await supabase
+        .from("FinalPOData")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("[v0] Supabase error:", error);
+        return { data: null, error: { message: error.message } };
+      }
+
+      // Filter for error orders on the client side
+      const errorOrders = (data || []).filter((po) => {
+        // Check if finalLinesOutput or finalSOHeaderOutput are missing/null
+        if (!po.finalLinesOutput || !po.finalSOHeaderOutput) {
+          return true;
+        }
+
+        // Check for "Ambiguity in identification" errors in line items
+        const hasLineErrors = po.finalLinesOutput.some(
+          (line: LineItem) =>
+            line.json.itemNo === "Ambiguity in identification" ||
+            line.json.code === "Ambiguity in identification" ||
+            line.json.itemDescription === "Ambiguity in identification"
+        );
+
+        // Check for undefined/null values in critical SOHeader fields (excluding totalAmountIncludingTax)
+        const hasHeaderErrors =
+          !po.finalSOHeaderOutput.customerName ||
+          !po.finalSOHeaderOutput.orderDate;
+
+        return hasLineErrors || hasHeaderErrors;
+      });
+
+      return { data: errorOrders, error: null };
+    } catch (err) {
+      console.error("[v0] Database error:", err);
+      return {
+        data: null,
+        error: { message: "Failed to fetch error orders from database" },
+      };
+    }
+  }
+
+  private static async getMockErrorOrders(): Promise<{
     data: PurchaseOrder[] | null;
     error: { message: string } | null;
   }> {
@@ -119,10 +253,8 @@ export class PurchaseOrderService {
             line.json.itemDescription === "Ambiguity in identification"
         );
 
-        // Check for undefined/null values in critical SOHeader fields
+        // Check for undefined/null values in critical SOHeader fields (excluding totalAmountIncludingTax)
         const hasHeaderErrors =
-          !po.finalSOHeaderOutput.totalAmountIncludingTax ||
-          po.finalSOHeaderOutput.totalAmountIncludingTax === "null" ||
           !po.finalSOHeaderOutput.customerName ||
           !po.finalSOHeaderOutput.orderDate;
 
