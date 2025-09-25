@@ -1,20 +1,16 @@
 // Service layer for Purchase Order data operations
 // Can use either mock data or real Supabase database
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { mockPurchaseOrders } from "./mock-purchase-orders";
 
 // Supabase client - only works when environment variables are set
 const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = "https://snregmhjviiklvxkiwpp.supabase.co";
+  const supabaseKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNucmVnbWhqdmlpa2x2eGtpd3BwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyOTMzNTAsImV4cCI6MjA3Mzg2OTM1MH0.QV2xQI-6MNUXNP9kFleOBUSFONCmki84RaCYLvqxl6I";
 
-  if (!supabaseUrl || !supabaseKey) {
-    console.log("[v0] Supabase env vars not found, using mock data");
-    return null;
-  }
-
-  return createBrowserClient(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey);
 };
 
 const USE_REAL_DATABASE = false; // Set to true when you have Supabase configured
@@ -57,7 +53,6 @@ export interface SOHeader {
   totalAmountExcludingTax: string | null;
   totalTaxAmount: string | null;
   totalAmountIncludingTax: string | null;
-  sellToCity: string;
 }
 
 export interface PurchaseOrder {
@@ -101,8 +96,8 @@ export class PurchaseOrderService {
       const { data, error } = await supabase
         .from("FinalPOData")
         .select("*")
-        // .gte("created_at", today)
-        // .lt("created_at", tomorrow)
+        .gte("created_at", today)
+        .lt("created_at", tomorrow)
         .order("created_at", { ascending: false });
 
       if (error) {

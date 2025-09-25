@@ -1,193 +1,145 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  ChevronDown,
-  ChevronRight,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
-import {
-  PurchaseOrderService,
-  type PurchaseOrder,
-} from "@/lib/purchase-order-service";
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { AlertCircle } from "lucide-react"
+import { PurchaseOrderService, type PurchaseOrder } from "@/lib/purchase-order-service"
+import { MetricCard } from "@/components/atoms/metric-card"
+import { PurchaseOrderCard } from "@/components/molecules/purchase-order-card"
 
 export default function PurchaseOrderDashboard() {
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const hasError = (po: PurchaseOrder) => {
+    if (!po.finalLinesOutput || !po.finalSOHeaderOutput) {
+      return true
+    }
+
+    const hasLineErrors = po.finalLinesOutput.some(
+      (line) =>
+        line.json.itemNo === "Ambiguity in identification" ||
+        line.json.code === "Ambiguity in identification" ||
+        line.json.itemDescription === "Ambiguity in identification",
+    )
+
+    const hasHeaderErrors =
+      !po.finalSOHeaderOutput.totalAmountExcludingTax ||
+      !po.finalSOHeaderOutput.customerName ||
+      !po.finalSOHeaderOutput.orderDate
+
+    return hasLineErrors || hasHeaderErrors
+  }
+
+  const getErrorDetails = (po: PurchaseOrder) => {
+    const errors = []
+    if (!po.finalLinesOutput) {
+      errors.push("Lines output missing or invalid")
+    } else {
+      const lineErrors = po.finalLinesOutput.filter(
+        (line) =>
+          line.json.itemNo === "Ambiguity in identification" ||
+          line.json.code === "Ambiguity in identification" ||
+          line.json.itemDescription === "Ambiguity in identification",
+      )
+      if (lineErrors.length > 0) {
+        errors.push(`${lineErrors.length} line item(s) have ambiguous identification`)
+
+        // Add details about each problematic line
+        lineErrors.forEach((errorLine) => {
+          const poItemNumber = errorLine.json.poItemNumber
+          const poDescription = errorLine.json.poDescription
+
+          // Build error message parts conditionally
+          const messageParts = []
+
+          if (poItemNumber && poItemNumber !== "undefined" && poItemNumber.trim() !== "") {
+            messageParts.push(`PO item number "${poItemNumber}"`)
+          }
+
+          if (poDescription && poDescription !== "undefined" && poDescription.trim() !== "") {
+            messageParts.push(`description "${poDescription}"`)
+          }
+
+          // Create the error message based on available fields
+          if (messageParts.length > 0) {
+            const messageText = messageParts.join(" and ")
+            errors.push(`Line with ${messageText} has identification error`)
+          } else {
+            errors.push("Line has identification error (no valid identifiers found)")
+          }
+        })
+      }
+    }
+
+    if (!po.finalSOHeaderOutput) {
+      errors.push("Header output missing or invalid")
+    } else {
+      if (!po.finalSOHeaderOutput.totalAmountExcludingTax) {
+        errors.push("Total amount excluding tax is missing")
+      }
+      if (!po.finalSOHeaderOutput.customerName) {
+        errors.push("Customer name is missing")
+      }
+      if (!po.finalSOHeaderOutput.orderDate) {
+        errors.push("Order date is missing")
+      }
+    }
+
+    return errors
+  }
 
   useEffect(() => {
     async function fetchPurchaseOrders() {
       try {
-        console.log("[v0] Fetching today's purchase orders...");
+        console.log("[v0] Fetching today's purchase orders...")
 
-        const { data, error: serviceError } =
-          await PurchaseOrderService.getTodaysPurchaseOrders();
+        const { data, error: serviceError } = await PurchaseOrderService.getTodaysPurchaseOrders()
 
         if (serviceError) {
-          console.log("[v0] Service error:", serviceError);
-          setError(`Failed to fetch data: ${serviceError.message}`);
-          return;
+          console.log("[v0] Service error:", serviceError)
+          setError(`Failed to fetch data: ${serviceError.message}`)
+          return
         }
 
-        console.log("[v0] Fetched purchase orders:", data);
-        setPurchaseOrders(data || []);
+        console.log("[v0] Fetched purchase orders:", data)
+        setPurchaseOrders(data || [])
       } catch (err) {
-        console.log("[v0] Fetch error:", err);
-        setError("Failed to connect to database");
+        console.log("[v0] Fetch error:", err)
+        setError("Failed to connect to database")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    fetchPurchaseOrders();
-  }, []);
+    fetchPurchaseOrders()
+  }, [])
 
   // Calculate metrics
-  const today = new Date().toDateString();
-  const todayOrders = purchaseOrders.filter(
-    (po) => new Date(po.created_at).toDateString() === today
-  );
+  const today = new Date().toDateString()
+  const todayOrders = purchaseOrders.filter((po) => new Date(po.created_at).toDateString() === today)
 
-  const errorOrders = purchaseOrders.filter((po) => {
-    // Check if finalLinesOutput or finalSOHeaderOutput are missing/null
-    if (!po.finalLinesOutput || !po.finalSOHeaderOutput) {
-      return true;
-    }
-
-    // Check for "Ambiguity in identification" errors in line items
-    const hasLineErrors = po.finalLinesOutput.some(
-      (line) =>
-        line.json.itemNo === "Ambiguity in identification" ||
-        line.json.code === "Ambiguity in identification" ||
-        line.json.itemDescription === "Ambiguity in identification"
-    );
-
-    // Check for undefined/null values in critical SOHeader fields
-    const hasHeaderErrors =
-      !po.finalSOHeaderOutput.totalAmountExcludingTax ||
-      !po.finalSOHeaderOutput.customerName ||
-      !po.finalSOHeaderOutput.orderDate;
-
-    return hasLineErrors || hasHeaderErrors;
-  });
+  const errorOrders = purchaseOrders.filter((po) => hasError(po))
 
   const toggleCard = (pdfName: string) => {
-    const newExpanded = new Set(expandedCards);
+    const newExpanded = new Set(expandedCards)
     if (newExpanded.has(pdfName)) {
-      newExpanded.delete(pdfName);
+      newExpanded.delete(pdfName)
     } else {
-      newExpanded.add(pdfName);
+      newExpanded.add(pdfName)
     }
-    setExpandedCards(newExpanded);
-  };
-
-  const hasError = (po: PurchaseOrder) => {
-    if (!po.finalLinesOutput || !po.finalSOHeaderOutput) {
-      return true;
-    }
-
-    const hasLineErrors = po.finalLinesOutput.some(
-      (line) =>
-        line.json.itemNo === "Ambiguity in identification" ||
-        line.json.code === "Ambiguity in identification" ||
-        line.json.itemDescription === "Ambiguity in identification"
-    );
-
-    const hasHeaderErrors =
-      !po.finalSOHeaderOutput.totalAmountExcludingTax ||
-      !po.finalSOHeaderOutput.customerName ||
-      !po.finalSOHeaderOutput.orderDate;
-
-    return hasLineErrors || hasHeaderErrors;
-  };
+    setExpandedCards(newExpanded)
+  }
 
   const formatTime = (date: string) => {
     return new Date(date).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-    });
-  };
-
-  const getErrorDetails = (po: PurchaseOrder) => {
-    const errors = [];
-    if (!po.finalLinesOutput) {
-      errors.push("Lines output missing or invalid");
-    } else {
-      const lineErrors = po.finalLinesOutput.filter(
-        (line) =>
-          line.json.itemNo === "Ambiguity in identification" ||
-          line.json.code === "Ambiguity in identification" ||
-          line.json.itemDescription === "Ambiguity in identification"
-      );
-      if (lineErrors.length > 0) {
-        errors.push(
-          `${lineErrors.length} line item(s) have ambiguous identification`
-        );
-
-        // Add details about each problematic line
-        lineErrors.forEach((errorLine) => {
-          const poItemNumber = errorLine.json.poItemNumber;
-          const poDescription = errorLine.json.poDescription;
-
-          // Build error message parts conditionally
-          const messageParts = [];
-
-          if (
-            poItemNumber &&
-            poItemNumber !== "undefined" &&
-            poItemNumber.trim() !== ""
-          ) {
-            messageParts.push(`PO item number "${poItemNumber}"`);
-          }
-
-          if (
-            poDescription &&
-            poDescription !== "undefined" &&
-            poDescription.trim() !== ""
-          ) {
-            messageParts.push(`description "${poDescription}"`);
-          }
-
-          // Create the error message based on available fields
-          if (messageParts.length > 0) {
-            const messageText = messageParts.join(" and ");
-            errors.push(`Line with ${messageText} has identification error`);
-          } else {
-            errors.push(
-              "Line has identification error (no valid identifiers found)"
-            );
-          }
-        });
-      }
-    }
-
-    if (!po.finalSOHeaderOutput) {
-      errors.push("Header output missing or invalid");
-    } else {
-      if (!po.finalSOHeaderOutput.totalAmountExcludingTax) {
-        errors.push("Total amount excluding tax is missing");
-      }
-      if (!po.finalSOHeaderOutput.customerName) {
-        errors.push("Customer name is missing");
-      }
-      if (!po.finalSOHeaderOutput.orderDate) {
-        errors.push("Order date is missing");
-      }
-    }
-
-    return errors;
-  };
+    })
+  }
 
   if (loading) {
     return (
@@ -197,7 +149,7 @@ export default function PurchaseOrderDashboard() {
           <p className="text-muted-foreground">Loading purchase orders...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -206,14 +158,12 @@ export default function PurchaseOrderDashboard() {
         <Card className="bg-card border-border max-w-md">
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-4" />
-            <p className="text-destructive font-medium mb-2">
-              Connection Error
-            </p>
+            <p className="text-destructive font-medium mb-2">Connection Error</p>
             <p className="text-muted-foreground text-sm">{error}</p>
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -221,406 +171,66 @@ export default function PurchaseOrderDashboard() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            Purchase Order Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Monitor today's purchase order processing
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Purchase Order Dashboard</h1>
+          <p className="text-muted-foreground">Monitor today's purchase order processing</p>
         </div>
 
         {/* Metric Tiles */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Date */}
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="text-4xl font-bold text-foreground">
-                {new Date().toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>
-              <p className="text-base text-muted-foreground">Today's Date</p>
-            </CardContent>
-          </Card>
-
-          {/* Total Entries */}
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="text-4xl font-bold text-foreground">
-                {todayOrders.length}
-              </div>
-              <p className="text-base text-muted-foreground">Entries</p>
-            </CardContent>
-          </Card>
-
-          {/* Errors */}
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="text-4xl font-bold text-destructive">
-                {errorOrders.length}
-              </div>
-              <p className="text-base text-muted-foreground">Errors</p>
-            </CardContent>
-          </Card>
-
-          {/* Last Updated */}
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="text-4xl font-bold text-foreground">
-                {purchaseOrders.length > 0
-                  ? formatTime(purchaseOrders[0].created_at)
-                  : "--:--:--"}
-              </div>
-              <p className="text-base text-muted-foreground">Updated</p>
-            </CardContent>
-          </Card>
+          <MetricCard
+            value={new Date().toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+            label="Today's Date"
+          />
+          <MetricCard value={todayOrders.length} label="Entries" />
+          <MetricCard value={errorOrders.length} label="Errors" variant="error" />
+          <MetricCard
+            value={purchaseOrders.length > 0 ? formatTime(purchaseOrders[0].created_at) : "--:--:--"}
+            label="Updated"
+          />
         </div>
 
         {/* Purchase Order Cards */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">
-            Purchase Orders
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground">Purchase Orders</h2>
 
           {purchaseOrders.length === 0 ? (
             <Card className="bg-card border-border">
               <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">
-                  No purchase orders found for today
-                </p>
+                <p className="text-muted-foreground">No purchase orders found for today</p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
               {[...purchaseOrders]
                 .sort((a, b) => {
-                  const aHasError = hasError(a);
-                  const bHasError = hasError(b);
+                  const aHasError = hasError(a)
+                  const bHasError = hasError(b)
 
                   // If one has error and other doesn't, prioritize the one with error
-                  if (aHasError && !bHasError) return -1;
-                  if (!aHasError && bHasError) return 1;
+                  if (aHasError && !bHasError) return -1
+                  if (!aHasError && bHasError) return 1
 
                   // If both have same error status, maintain original order
-                  return 0;
+                  return 0
                 })
                 .map((po) => (
-                  <Card key={po.pdfName} className="bg-card border-border">
-                    <Collapsible>
-                      <CollapsibleTrigger
-                        className="w-full"
-                        onClick={() => toggleCard(po.pdfName)}
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {expandedCards.has(po.pdfName) ? (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                              )}
-                              <div className="text-left">
-                                <CardTitle className="text-base font-medium text-foreground">
-                                  {po.pdfName}
-                                </CardTitle>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  PO: {po.poNumber}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {hasError(po) ? (
-                                <Badge
-                                  variant="destructive"
-                                  className="flex items-center gap-1"
-                                >
-                                  <AlertCircle className="h-3 w-3" />
-                                  Error
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="default"
-                                  className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Success
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </CollapsibleTrigger>
-
-                      <CollapsibleContent>
-                        <CardContent className="pt-0">
-                          <div className="space-y-4 pl-7">
-                            {po.finalSOHeaderOutput && (
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-foreground">
-                                  Sales Order Details
-                                </h4>
-                                <div className="bg-muted/50 rounded-lg p-6 space-y-6">
-                                  {/* Customer Information Section */}
-                                  <div className="space-y-3">
-                                    <h5 className="text-sm font-semibold text-foreground border-b border-border pb-1">
-                                      Customer Information
-                                    </h5>
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          Customer Name
-                                        </div>
-                                        <div className="text-sm font-medium text-foreground">
-                                          {po.finalSOHeaderOutput
-                                            .customerName || "N/A"}
-                                        </div>
-                                      </div>
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          Customer Number
-                                        </div>
-                                        <div className="text-sm font-medium text-foreground">
-                                          {po.finalSOHeaderOutput
-                                            .customerNumber || "N/A"}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Address Information Section */}
-                                  <div className="space-y-3">
-                                    <h5 className="text-sm font-semibold text-foreground border-b border-border pb-1">
-                                      Address Information
-                                    </h5>
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          Address
-                                        </div>
-                                        <div className="text-sm font-medium text-foreground">
-                                          {po.finalSOHeaderOutput
-                                            .billToAddressLine1 ||
-                                            po.finalSOHeaderOutput
-                                              .shipToAddressLine1 ||
-                                            "N/A"}
-                                        </div>
-                                      </div>
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          City
-                                        </div>
-                                        <div className="text-sm font-medium text-foreground">
-                                          {po.finalSOHeaderOutput.sellToAddressLine1
-                                            ?.split(",")
-                                            .pop()
-                                            ?.trim() || "N/A"}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Order & Financial Information Section */}
-                                  <div className="space-y-3">
-                                    <h5 className="text-sm font-semibold text-foreground border-b border-border pb-1">
-                                      Order & Financial Details
-                                    </h5>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          Order Date
-                                        </div>
-                                        <div className="text-sm font-medium text-foreground">
-                                          {po.finalSOHeaderOutput.orderDate ||
-                                            "N/A"}
-                                        </div>
-                                      </div>
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          Amount (Ex Tax)
-                                        </div>
-                                        <div className="text-sm font-bold text-foreground">
-                                          {po.finalSOHeaderOutput
-                                            .currencyCode || ""}{" "}
-                                          {po.finalSOHeaderOutput
-                                            .totalAmountExcludingTax || "N/A"}
-                                        </div>
-                                      </div>
-                                      <div className="bg-background rounded-md p-3 border border-border">
-                                        <div className="text-xs text-muted-foreground mb-1">
-                                          Tax Amount
-                                        </div>
-                                        <div className="text-sm font-medium text-foreground">
-                                          {po.finalSOHeaderOutput
-                                            .currencyCode || ""}{" "}
-                                          {po.finalSOHeaderOutput
-                                            .totalTaxAmount || "0"}
-                                        </div>
-                                      </div>
-                                      {po.finalSOHeaderOutput.totalTaxAmount &&
-                                        po.finalSOHeaderOutput
-                                          .totalTaxAmount !== "0" &&
-                                        po.finalSOHeaderOutput
-                                          .totalAmountIncludingTax && (
-                                          <div className="bg-background rounded-md p-3 border border-border">
-                                            <div className="text-xs text-muted-foreground mb-1">
-                                              Total (Inc Tax)
-                                            </div>
-                                            <div className="text-sm font-bold text-green-600 dark:text-green-400">
-                                              {po.finalSOHeaderOutput
-                                                .currencyCode || ""}{" "}
-                                              {
-                                                po.finalSOHeaderOutput
-                                                  .totalAmountIncludingTax
-                                              }
-                                            </div>
-                                          </div>
-                                        )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {po.finalLinesOutput &&
-                              po.finalLinesOutput.length > 0 && (
-                                <div className="space-y-2">
-                                  <h4 className="font-medium text-foreground">
-                                    Line Items
-                                  </h4>
-                                  <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border-2 border-blue-200 dark:border-blue-800">
-                                    <div className="space-y-2">
-                                      {po.finalLinesOutput.map(
-                                        (line, index) => (
-                                          <div
-                                            key={index}
-                                            className="flex flex-wrap items-center gap-4 p-3 bg-white dark:bg-blue-900/20 rounded-md border-2 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-400 dark:hover:border-blue-600 transition-colors duration-200 shadow-sm"
-                                          >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                Item:
-                                              </span>
-                                              <span className="text-sm text-foreground font-medium">
-                                                {line.json.itemNo || "N/A"}
-                                              </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                Code:
-                                              </span>
-                                              <span className="text-sm text-foreground">
-                                                {line.json.code || "N/A"}
-                                              </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                Description:
-                                              </span>
-                                              <span
-                                                className="text-sm text-foreground truncate max-w-48"
-                                                title={
-                                                  line.json.itemDescription
-                                                }
-                                              >
-                                                {line.json.itemDescription ||
-                                                  "N/A"}
-                                              </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                PO#:
-                                              </span>
-                                              <span className="text-sm text-foreground">
-                                                {line.json.poItemNumber ||
-                                                  "N/A"}
-                                              </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                Qty:
-                                              </span>
-                                              <span className="text-sm text-foreground font-medium">
-                                                {line.json.quantity || "0"}
-                                              </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                Price:
-                                              </span>
-                                              <span className="text-sm text-foreground font-medium">
-                                                {line.json.unitprice || "0"}
-                                              </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                UOM:
-                                              </span>
-                                              <span className="text-sm text-foreground">
-                                                {line.json.unitOfMeasureCode ||
-                                                  "N/A"}
-                                              </span>
-                                            </div>
-
-                                            {line.json.shipmentDate && (
-                                              <div className="flex items-center gap-2 min-w-0">
-                                                <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                                                  Ship:
-                                                </span>
-                                                <span className="text-sm text-foreground">
-                                                  {line.json.shipmentDate}
-                                                </span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        )
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                            {hasError(po) && (
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-destructive">
-                                  Error Details
-                                </h4>
-                                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                                  <div className="space-y-3">
-                                    <ul className="text-sm text-destructive space-y-1">
-                                      {getErrorDetails(po).map(
-                                        (error, index) => (
-                                          <li
-                                            key={index}
-                                            className="flex items-start gap-2"
-                                          >
-                                            <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                            <span>{error}</span>
-                                          </li>
-                                        )
-                                      )}
-                                    </ul>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </Card>
+                  <PurchaseOrderCard
+                    key={po.pdfName}
+                    purchaseOrder={po}
+                    isExpanded={expandedCards.has(po.pdfName)}
+                    onToggle={() => toggleCard(po.pdfName)}
+                    hasError={hasError(po)}
+                    getErrorDetails={getErrorDetails}
+                  />
                 ))}
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
