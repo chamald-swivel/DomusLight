@@ -13,7 +13,7 @@ const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 
-const USE_REAL_DATABASE = false; // Set to true when you have Supabase configured
+const USE_REAL_DATABASE = true; // Set to true when you have Supabase configured
 
 export interface LineItem {
   json: {
@@ -95,22 +95,26 @@ export class PurchaseOrderService {
 
       const { data, error } = await supabase
         .from("FinalPOData")
-        .select("*")
+        .select(`*`)
         .gte("created_at", today)
         .lt("created_at", tomorrow)
         .order("created_at", { ascending: false });
-
+      const poData: PurchaseOrder[] =
+        data?.map((po) => {
+          return {
+            pdfName: po.pdfName,
+            poNumber: po.saledOrderBeforeLookup.id,
+            finalLinesOutput: po.finalLinesOutput,
+            finalSOHeaderOutput: po.finalSOHeaderOutput,
+            created_at: po.created_at,
+          };
+        }) || [];
       if (error) {
         console.error("[v0] Supabase error:", error);
         return { data: null, error: { message: error.message } };
       }
 
-      console.log(
-        "[v0] Fetched",
-        data?.length || 0,
-        "purchase orders from Supabase"
-      );
-      return { data: data || [], error: null };
+      return { data: poData || [], error: null };
     } catch (err) {
       console.error("[v0] Database error:", err);
       return {
