@@ -53,6 +53,7 @@ export interface SOHeader {
   totalAmountExcludingTax: string | null;
   totalTaxAmount: string | null;
   totalAmountIncludingTax: string | null;
+  sellToCity: string | null;
 }
 
 export interface PurchaseOrder {
@@ -290,6 +291,109 @@ export class PurchaseOrderService {
       return {
         data: null,
         error: { message: "Failed to fetch purchase order" },
+      };
+    }
+  }
+  static async getPurchaseOrdersByDate(selectedDate: Date): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    if (USE_REAL_DATABASE) {
+      return this.getRealPurchaseOrdersByDate(selectedDate);
+    } else {
+      return this.getMockPurchaseOrdersByDate(selectedDate);
+    }
+  }
+
+  private static async getRealPurchaseOrdersByDate(
+    selectedDate: Date
+  ): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error("Supabase client not configured");
+      }
+
+      // Get the selected date in YYYY-MM-DD format
+      const dateStr = selectedDate.toISOString().split("T")[0];
+      const nextDay = new Date(selectedDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDayStr = nextDay.toISOString().split("T")[0];
+
+      console.log("[v0] Fetching purchase orders for date:", dateStr);
+
+      const { data, error } = await supabase
+        .from("FinalPOData")
+        .select("*")
+        .gte("created_at", dateStr)
+        .lt("created_at", nextDayStr)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("[v0] Supabase error:", error);
+        return { data: null, error: { message: error.message } };
+      }
+
+      console.log(
+        "[v0] Fetched",
+        data?.length || 0,
+        "purchase orders from Supabase for",
+        dateStr
+      );
+      return { data: data || [], error: null };
+    } catch (err) {
+      console.error("[v0] Database error:", err);
+      return {
+        data: null,
+        error: { message: "Failed to fetch purchase orders from database" },
+      };
+    }
+  }
+
+  private static async getMockPurchaseOrdersByDate(
+    selectedDate: Date
+  ): Promise<{
+    data: PurchaseOrder[] | null;
+    error: { message: string } | null;
+  }> {
+    try {
+      // Simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // Get the selected date in YYYY-MM-DD format for comparison
+      const dateStr = selectedDate.toISOString().split("T")[0];
+
+      // Filter orders created on the selected date
+      const dateOrders = mockPurchaseOrders.filter((po) => {
+        const createdDate = po.created_at.split(" ")[0];
+        return createdDate === dateStr;
+      });
+
+      // Sort by created_at descending
+      const sortedOrders = dateOrders.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      console.log(
+        "[v0] Service: Fetched",
+        sortedOrders.length,
+        "mock purchase orders for",
+        dateStr
+      );
+
+      return {
+        data: sortedOrders,
+        error: null,
+      };
+    } catch (err) {
+      console.error("[v0] Service error:", err);
+      return {
+        data: null,
+        error: { message: "Failed to fetch purchase orders" },
       };
     }
   }
