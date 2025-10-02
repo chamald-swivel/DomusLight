@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle, Search, Settings } from "lucide-react";
 import {
   PurchaseOrderService,
   type PurchaseOrder,
@@ -11,6 +11,7 @@ import {
 import { MetricCard } from "@/components/atoms/metric-card";
 import { PurchaseOrderCard } from "@/components/molecules/purchase-order-card";
 import { DatePicker } from "@/components/molecules/date-picker";
+import Link from "next/link";
 
 export default function PurchaseOrderDashboard() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -224,13 +225,21 @@ export default function PurchaseOrderDashboard() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            Purchase Order Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Monitor today's purchase order processing
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">
+              Purchase Order Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Monitor today's purchase order processing
+            </p>
+          </div>
+          <Link href="/prompt-rules">
+            <Button variant="outline" className="gap-2 bg-transparent">
+              <Settings className="h-4 w-4" />
+              Manage Prompt Rules
+            </Button>
+          </Link>
         </div>
 
         {/* Metric Tiles */}
@@ -243,7 +252,7 @@ export default function PurchaseOrderDashboard() {
             })}
             label="Today's Date"
           />
-          <MetricCard value={todayOrders.length} label="Entries" />
+          <MetricCard value={purchaseOrders.length} label="Entries" />
           <MetricCard
             value={errorOrders.length}
             label="Errors"
