@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Search, Settings } from "lucide-react";
+import { AlertCircle, Search, Settings, Upload } from "lucide-react";
 import {
   PurchaseOrderService,
   type PurchaseOrder,
@@ -234,12 +234,20 @@ export default function PurchaseOrderDashboard() {
               Monitor today's purchase order processing
             </p>
           </div>
-          <Link href="/prompt-rules">
-            <Button variant="outline" className="gap-2 bg-transparent">
-              <Settings className="h-4 w-4" />
-              Manage Prompt Rules
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/upload-po">
+              <Button variant="default" className="gap-2">
+                <Upload className="h-4 w-4" />
+                Upload PO
+              </Button>
+            </Link>
+            <Link href="/prompt-rules">
+              <Button variant="outline" className="gap-2 bg-transparent">
+                <Settings className="h-4 w-4" />
+                Manage Prompt Rules
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Metric Tiles */}

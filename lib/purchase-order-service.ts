@@ -294,6 +294,7 @@ export class PurchaseOrderService {
       };
     }
   }
+
   static async getPurchaseOrdersByDate(selectedDate: Date): Promise<{
     data: PurchaseOrder[] | null;
     error: { message: string } | null;
@@ -337,13 +338,18 @@ export class PurchaseOrderService {
         return { data: null, error: { message: error.message } };
       }
 
-      console.log(
-        "[v0] Fetched",
-        data?.length || 0,
-        "purchase orders from Supabase for",
-        dateStr
-      );
-      return { data: data || [], error: null };
+      const poData: PurchaseOrder[] =
+        data?.map((po) => {
+          return {
+            pdfName: po.pdfName,
+            poNumber: po.saledOrderBeforeLookup.id,
+            finalLinesOutput: po.finalLinesOutput,
+            finalSOHeaderOutput: po.finalSOHeaderOutput,
+            created_at: po.created_at,
+          };
+        }) || [];
+
+      return { data: poData || [], error: null };
     } catch (err) {
       console.error("[v0] Database error:", err);
       return {
